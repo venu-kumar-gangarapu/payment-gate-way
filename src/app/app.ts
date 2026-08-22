@@ -156,6 +156,6 @@ export class App {
     this.approved.set(false);
     this.processing.set(false);
       window.location.href =
-      `http://localhost:3000/cart?payment=success&orderId=${this.orderId()}&paymentId=909`;
+      `https://react-apps-eight-steel.vercel.app/cart?payment=success&orderId=${this.orderId()}&paymentId=909`;
   }
 }
