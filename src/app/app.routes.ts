@@ -5,5 +5,9 @@ export const routes: Routes =  [
     {
         path:'payment',
         component :App
+    },
+    {
+        path:'',
+        component :App
     }
 ]
