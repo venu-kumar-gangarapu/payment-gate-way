@@ -1,6 +1,7 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Route, Router } from '@angular/router';
 
 type MethodId = 'card' | 'upi' | 'netbanking' | 'wallet' | 'cod';
 
@@ -24,12 +25,11 @@ interface OrderLine {
   styleUrl: './app.scss',
 })
 export class App {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   // ---- Order ledger ------------------------------------------------------
-  protected readonly orderId = '#PG-88213';
   protected readonly lines: OrderLine[] = [
-    { name: 'Aurora Noise-Cancelling Headphones', meta: 'Slate Grey', qty: 1, price: 4999 },
-    { name: 'Braided USB-C Cable, 2m', meta: 'Pack of 2', qty: 2, price: 299 },
-    { name: 'Express Handling', meta: 'Ships in 24h', qty: 1, price: 149 },
+    { name: 'Aurora Noise-Cancelling Headphones', meta: 'Slate Grey', qty: 1, price: 4999 }
   ];
 
   protected readonly subtotal = computed(() =>
@@ -60,31 +60,32 @@ export class App {
   ];
 
   // ---- Card form state ------------------------------------------------
-  protected cardNumber = '';
-  protected cardName = '';
-  protected cardExpiry = '';
-  protected cardCvv = '';
-  protected saveCard = false;
+  protected cardNumber = signal('');
+  protected cardName = signal('');
+  protected cardExpiry = signal('');
+  protected cardCvv = signal('');
+  protected saveCard = signal('');
 
-  // ---- UPI form state ---------------------------------------------------
-  protected upiId = '';
-  protected readonly qrCells = Array.from({ length: 64 }, (_, i) => i);
-
-  // ---- Net banking state -------------------------------------------------
-  protected selectedBank = '';
-
-  // ---- Wallet state -------------------------------------------------------
-  protected selectedWallet = '';
-  protected walletMobile = '';
-
-  // ---- Cash on delivery ---------------------------------------------------
-  protected confirmAddress = false;
+  protected upiId = signal('');
+  protected selectedBank = signal('');
+  protected selectedWallet = signal('');
+  protected walletMobile = signal('');
+  protected confirmAddress = signal(false);
 
   // ---- Flow state -----------------------------------------------------
   protected readonly processing = signal(false);
   protected readonly approved = signal(false);
   protected readonly approvedAt = signal('');
-
+ 
+  readonly orderId = signal('');
+  readonly amount = signal('');
+  ngOnInit (){
+      this.route.queryParams.subscribe((params :any)=>{
+        console.log(params);
+        this.orderId.set(params?.orderId);
+        this.amount.set(params?.amount);
+      })
+  }
   protected select(id: MethodId) {
     if (this.processing() || this.approved()) return;
     this.selected.set(id);
@@ -92,42 +93,50 @@ export class App {
 
   protected onCardNumberInput(value: string) {
     const digits = value.replace(/\D/g, '').slice(0, 16);
-    this.cardNumber = digits.replace(/(.{4})/g, '$1 ').trim();
+    this.cardNumber.set(digits.replace(/(.{4})/g, '$1 ').trim());
   }
 
   protected onExpiryInput(value: string) {
     const digits = value.replace(/\D/g, '').slice(0, 4);
-    this.cardExpiry = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+    this.cardExpiry.set(digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits);
   }
 
+  
   protected readonly canAuthorize = computed(() => {
     switch (this.selected()) {
       case 'card':
+        
+        console.log(this.cardNumber().replace(/\s/g, '').length === 16,'cardnumebr');
+        console.log(this.cardName().trim().length > 1,'name');
+        console.log( this.cardCvv.length >= 3,'cvv');
+        
+        
         return (
-          this.cardNumber.replace(/\s/g, '').length === 16 &&
-          this.cardName.trim().length > 1 &&
-          /^\d{2}\/\d{2}$/.test(this.cardExpiry) &&
-          this.cardCvv.length >= 3
+          this.cardNumber().replace(/\s/g, '').length === 16 &&
+          this.cardName().trim().length > 1 &&
+          /^\d{2}\/\d{2}$/.test(this.cardExpiry()) &&
+          this.cardCvv().length >= 3
         );
       case 'upi':
-        return /^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(this.upiId);
+        return /^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(this.upiId());
       case 'netbanking':
         return !!this.selectedBank;
       case 'wallet':
-        return !!this.selectedWallet && this.walletMobile.replace(/\D/g, '').length === 10;
+        return !!this.selectedWallet && this.walletMobile().replace(/\D/g, '').length === 10;
       case 'cod':
         return this.confirmAddress;
       default:
+        
         return false;
     }
   });
 
-  protected currency(value: number): string {
-    return '₹' + value.toLocaleString('en-IN');
+  protected currency(value: string): string {
+    return '₹' + Number(value).toLocaleString('en-IN');
   }
 
   protected authorize() {
-    if (!this.canAuthorize() || this.processing()) return;
+    if (!this.canAuthorize()) return;
     this.processing.set(true);
     window.setTimeout(() => {
       this.processing.set(false);
@@ -146,5 +155,7 @@ export class App {
   protected startNewOrder() {
     this.approved.set(false);
     this.processing.set(false);
+      window.location.href =
+      `http://localhost:3000/cart?payment=success&orderId=${this.orderId()}&paymentId=909`;
   }
 }

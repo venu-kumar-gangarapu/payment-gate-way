@@ -57,7 +57,7 @@
   max-width: 1080px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  // grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 28px;
   align-items: start;
 }
@@ -202,6 +202,8 @@
   letter-spacing: 0.08em;
   color: var(--text-mid);
   margin-bottom: 18px;
+  display: flex;
+  justify-content: space-between;
 }
 
 .dial {
@@ -563,4 +565,9 @@ select {
     background: var(--text-ink);
     color: var(--paper-100);
   }
+}
+
+.btns{
+  display: flex;
+  gap:5rem;
 }

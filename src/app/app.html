@@ -3,19 +3,19 @@
   <header class="topbar">
     <div class="brand">
       <svg class="brand__lock" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.6"/>
-        <path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-        <circle cx="12" cy="15.2" r="1.3" fill="currentColor"/>
+        <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.6" />
+        <path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        <circle cx="12" cy="15.2" r="1.3" fill="currentColor" />
       </svg>
       <span class="brand__name">SecurePay</span>
     </div>
-    <div class="topbar__ledger">Ledger No. <span>{{ orderId }}</span></div>
+    <div class="topbar__ledger">Ledger No. <span>{{ orderId() }}</span></div>
   </header>
 
   <main class="checkout">
 
     <!-- ORDER RECEIPT ---------------------------------------------------- -->
-    <section class="receipt" aria-label="Order summary">
+    <!-- <section class="receipt" aria-label="Order summary">
       <div class="receipt__body">
         <h1 class="receipt__title">Order Receipt</h1>
         <p class="receipt__sub">Reviewed &amp; ready to authorize</p>
@@ -27,7 +27,7 @@
                 <span class="receipt__line-name">{{ line.name }}</span>
                 <span class="receipt__line-meta">{{ line.meta }} &middot; Qty {{ line.qty }}</span>
               </div>
-              <span class="receipt__line-amount">{{ currency(line.qty * line.price) }}</span>
+              <span class="receipt__line-amount"></span>
             </li>
           }
         </ul>
@@ -36,20 +36,10 @@
 
         <dl class="receipt__totals">
           <div class="receipt__totals-row">
-            <dt>Subtotal</dt>
-            <dd>{{ currency(subtotal()) }}</dd>
-          </div>
-          <div class="receipt__totals-row">
-            <dt>Shipping</dt>
-            <dd>Complimentary</dd>
-          </div>
-          <div class="receipt__totals-row">
-            <dt>GST (18%)</dt>
-            <dd>{{ currency(tax()) }}</dd>
           </div>
           <div class="receipt__totals-row receipt__totals-row--total">
             <dt>Total due</dt>
-            <dd>{{ currency(total()) }}</dd>
+            <dd>{{ currency(amount()) }}</dd>
           </div>
         </dl>
       </div>
@@ -57,180 +47,172 @@
       <div class="receipt__stub">
         <span>Thank you for shopping with SecurePay</span>
       </div>
-    </section>
+    </section> -->
 
     <!-- PAYMENT PANEL ------------------------------------------------------ -->
     <section class="vault" aria-label="Payment method">
 
-      <h2 class="vault__title">Select payment method</h2>
+      <h2 class="vault__title"><span> Select payment method</span> <span>Amount ({{amount()}})</span> </h2>
 
       <div class="dial" role="tablist" aria-label="Payment methods">
         @for (m of methods; track m.id) {
-          <button
-            type="button"
-            role="tab"
-            class="dial__tab"
-            [class.dial__tab--active]="selected() === m.id"
-            [attr.aria-selected]="selected() === m.id"
-            [disabled]="processing() || approved()"
-            (click)="select(m.id)">
+        <button type="button" role="tab" class="dial__tab" [class.dial__tab--active]="selected() === m.id"
+          [attr.aria-selected]="selected() === m.id" [disabled]="processing() || approved()" (click)="select(m.id)">
 
-            <span class="dial__icon">
-              @switch (m.id) {
-                @case ('card') {
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/>
-                    <path d="M3 10h18" stroke="currentColor" stroke-width="1.6"/>
-                    <rect x="6" y="13.2" width="4" height="1.8" rx="0.6" fill="currentColor"/>
-                  </svg>
-                }
-                @case ('upi') {
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M7 15V6m0 0 3 3M7 6 4 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M17 9v9m0 0-3-3m3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                }
-                @case ('netbanking') {
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M4 10 12 4l8 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M5 10v8m4-8v8m6-8v8m4-8v8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                    <path d="M3.5 18.5h17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                  </svg>
-                }
-                @case ('wallet') {
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M4 8a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" stroke="currentColor" stroke-width="1.6"/>
-                    <path d="M4 8.5 15 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                    <circle cx="16.3" cy="13" r="1.3" fill="currentColor"/>
-                  </svg>
-                }
-                @case ('cod') {
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <rect x="3" y="7" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/>
-                    <circle cx="12" cy="12.5" r="2.6" stroke="currentColor" stroke-width="1.6"/>
-                    <path d="M6.5 7 8 5m9.5 2L16 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                  </svg>
-                }
-              }
-            </span>
-            <span class="dial__label">{{ m.label }}</span>
-            <span class="dial__hint">{{ m.hint }}</span>
-          </button>
+          <span class="dial__icon">
+            @switch (m.id) {
+            @case ('card') {
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.6" />
+              <path d="M3 10h18" stroke="currentColor" stroke-width="1.6" />
+              <rect x="6" y="13.2" width="4" height="1.8" rx="0.6" fill="currentColor" />
+            </svg>
+            }
+            @case ('upi') {
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M7 15V6m0 0 3 3M7 6 4 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <path d="M17 9v9m0 0-3-3m3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+            }
+            @case ('netbanking') {
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 10 12 4l8 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <path d="M5 10v8m4-8v8m6-8v8m4-8v8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+              <path d="M3.5 18.5h17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+            }
+            @case ('cod') {
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="7" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.6" />
+              <circle cx="12" cy="12.5" r="2.6" stroke="currentColor" stroke-width="1.6" />
+              <path d="M6.5 7 8 5m9.5 2L16 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+            }
+            }
+          </span>
+          <span class="dial__label">{{ m.label }}</span>
+          <span class="dial__hint">{{ m.hint }}</span>
+        </button>
         }
       </div>
 
       <div class="vault__form">
 
         @if (selected() === 'card') {
+        <div class="field">
+          <label for="cardNumber">Card number</label>
+          <input id="cardNumber" name="cardNumber" type="text" inputmode="numeric" placeholder="0000 0000 0000 0000"
+            maxlength="19" [ngModel]="cardNumber()" (ngModelChange)="onCardNumberInput($event)"
+            [disabled]="processing() || approved()" />
+        </div>
+        <div class="field">
+          <label for="cardName">Name on card</label>
+          <input id="cardName" name="cardName" type="text" placeholder="As printed on the card" [ngModel]="cardName()"
+            (ngModelChange)="cardName.set($event)" [disabled]="processing() || approved()" />
+        </div>
+        <div class="field-row">
           <div class="field">
-            <label for="cardNumber">Card number</label>
-            <input id="cardNumber" name="cardNumber" type="text" inputmode="numeric"
-                   placeholder="0000 0000 0000 0000" maxlength="19"
-                   [ngModel]="cardNumber" (ngModelChange)="onCardNumberInput($event)"
-                   [disabled]="processing() || approved()" />
+            <label for="cardExpiry">Expiry</label>
+            <input id="cardExpiry" name="cardExpiry" type="text" inputmode="numeric" placeholder="MM/YY" maxlength="5"
+              [ngModel]="cardExpiry()" (ngModelChange)="onExpiryInput($event)"
+              [disabled]="processing() || approved()" />
           </div>
           <div class="field">
-            <label for="cardName">Name on card</label>
-            <input id="cardName" name="cardName" type="text" placeholder="As printed on the card"
-                   [(ngModel)]="cardName" [disabled]="processing() || approved()" />
+            <label for="cardCvv">CVV</label>
+            <input id="cardCvv" name="cardCvv" type="password" inputmode="numeric" placeholder="•••" maxlength="4"
+              [ngModel]="cardCvv()" (ngModelChange)="cardCvv.set($event)" [disabled]="processing() || approved()" />
           </div>
-          <div class="field-row">
-            <div class="field">
-              <label for="cardExpiry">Expiry</label>
-              <input id="cardExpiry" name="cardExpiry" type="text" inputmode="numeric" placeholder="MM/YY" maxlength="5"
-                     [ngModel]="cardExpiry" (ngModelChange)="onExpiryInput($event)"
-                     [disabled]="processing() || approved()" />
-            </div>
-            <div class="field">
-              <label for="cardCvv">CVV</label>
-              <input id="cardCvv" name="cardCvv" type="password" inputmode="numeric" placeholder="•••" maxlength="4"
-                     [(ngModel)]="cardCvv" [disabled]="processing() || approved()" />
-            </div>
-          </div>
-          <label class="checkbox">
-            <input type="checkbox" name="saveCard" [(ngModel)]="saveCard" [disabled]="processing() || approved()" />
-            <span>Save this card for faster checkout next time</span>
-          </label>
+        </div>
+        <label class="checkbox">
+          <input type="checkbox" name="saveCard" [ngModel]="saveCard()" [disabled]="processing() || approved()" />
+          <span>Save this card for faster checkout next time</span>
+        </label>
         }
 
         @if (selected() === 'upi') {
-          <div class="upi-layout">
-            <div class="field">
-              <label for="upiId">UPI ID</label>
-              <input id="upiId" name="upiId" type="text" placeholder="yourname@bank"
-                     [(ngModel)]="upiId" [disabled]="processing() || approved()" />
-              <p class="field__note">We'll send a collect request to this ID for {{ currency(total()) }}.</p>
-            </div>
-            <div class="qr">
-              <div class="qr__grid" aria-hidden="true">
-                @for (cell of qrCells; track cell) {
-                  <span [class.qr__cell--on]="(cell * 37 + 11) % 5 < 2"></span>
-                }
-              </div>
-              <span class="qr__caption">Or scan in any UPI app</span>
-            </div>
+        <div class="upi-layout">
+          <div class="field">
+            <label for="upiId">UPI ID</label>
+            <input id="upiId" name="upiId" type="text" placeholder="yourname@bank" [ngModel]="upiId()"
+              [disabled]="processing() || approved()" />
+            <p class="field__note">We'll send a collect request to this ID for {{ currency(amount()) }}.</p>
           </div>
+          <div class="qr">
+            <div class="qr__grid" aria-hidden="true">
+              <!-- @for (cell of qrCells; track cell) {
+                  <span [class.qr__cell--on]="(cell * 37 + 11) % 5 < 2"></span>
+                } -->
+            </div>
+            <span class="qr__caption">Or scan in any UPI app</span>
+          </div>
+        </div>
         }
 
         @if (selected() === 'netbanking') {
-          <div class="field">
-            <label for="bank">Choose your bank</label>
-            <select id="bank" name="bank" [(ngModel)]="selectedBank" [disabled]="processing() || approved()">
-              <option value="" disabled selected>Select a bank</option>
-              @for (bank of banks; track bank) {
-                <option [value]="bank">{{ bank }}</option>
-              }
-            </select>
-            <p class="field__note">You'll be redirected to your bank's secure login to approve this payment.</p>
-          </div>
+        <div class="field">
+          <label for="bank">Choose your bank</label>
+          <select id="bank" name="bank" [ngModel]="selectedBank()" [disabled]="processing() || approved()">
+            <option value="" disabled selected>Select a bank</option>
+            @for (bank of banks; track bank) {
+            <option [value]="bank">{{ bank }}</option>
+            }
+          </select>
+          <p class="field__note">You'll be redirected to your bank's secure login to approve this payment.</p>
+        </div>
         }
 
         @if (selected() === 'wallet') {
-          <div class="field">
-            <label for="wallet">Choose your wallet</label>
-            <select id="wallet" name="wallet" [(ngModel)]="selectedWallet" [disabled]="processing() || approved()">
-              <option value="" disabled selected>Select a wallet</option>
-              @for (w of wallets; track w) {
-                <option [value]="w">{{ w }}</option>
-              }
-            </select>
-          </div>
-          <div class="field">
-            <label for="walletMobile">Mobile number linked to wallet</label>
-            <input id="walletMobile" name="walletMobile" type="tel" inputmode="numeric" placeholder="10-digit mobile number" maxlength="10"
-                   [(ngModel)]="walletMobile" [disabled]="processing() || approved()" />
-          </div>
+        <div class="field">
+          <label for="wallet">Choose your wallet</label>
+          <select id="wallet" name="wallet" [ngModel]="selectedWallet()" [disabled]="processing() || approved()">
+            <option value="" disabled selected>Select a wallet</option>
+            @for (w of wallets; track w) {
+            <option [value]="w">{{ w }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="walletMobile">Mobile number linked to wallet</label>
+          <input id="walletMobile" name="walletMobile" type="tel" inputmode="numeric"
+            placeholder="10-digit mobile number" maxlength="10" [ngModel]="walletMobile()"
+            [disabled]="processing() || approved()" />
+        </div>
         }
 
         @if (selected() === 'cod') {
-          <div class="cod-note">
-            <p>Pay in cash when your order arrives. A small handling fee may apply at delivery — nothing is charged now.</p>
-          </div>
-          <label class="checkbox">
-            <input type="checkbox" name="confirmAddress" [(ngModel)]="confirmAddress" [disabled]="processing() || approved()" />
-            <span>I confirm my delivery address is correct and someone will be available to pay</span>
-          </label>
+        <div class="cod-note">
+          <p>Pay in cash when your order arrives. A small handling fee may apply at delivery — nothing is charged now.
+          </p>
+        </div>
+        <label class="checkbox">
+          <input type="checkbox" name="confirmAddress" [ngModel]="confirmAddress()"
+            [disabled]="processing() || approved()" />
+          <span>I confirm my delivery address is correct and someone will be available to pay</span>
+        </label>
         }
 
       </div>
-
-      <button
-        type="button"
-        class="authorize"
-        [disabled]="!canAuthorize() || processing() || approved()"
-        (click)="authorize()">
-        @if (processing()) {
+      <div class="btns">
+        <button type="button" class="authorize" [disabled]="!canAuthorize()" (click)="authorize()">
+          @if (processing()) {
           <span class="authorize__spinner" aria-hidden="true"></span>
           <span>Authorizing…</span>
-        } @else {
-          <span>Authorize payment &middot; {{ currency(total()) }}</span>
-        }
-      </button>
+          } @else {
+          <span>Authorize payment &middot; {{ currency(amount()) }}</span>
+          }
+        </button>
+        <button type="button" class="authorize" (click)="startNewOrder()">
+          <span>cancel</span>
+        </button>
+      </div>
 
       <p class="vault__footnote">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.5" />
+          <path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
         </svg>
         256-bit encrypted &middot; PCI-DSS compliant &middot; No card data stored on this page
       </p>
@@ -238,25 +220,35 @@
   </main>
 
   @if (approved()) {
-    <div class="overlay" role="dialog" aria-modal="true" aria-label="Payment approved">
-      <div class="seal">
-        <div class="seal__stamp">
-          <svg viewBox="0 0 100 100" aria-hidden="true">
-            <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="3"/>
-            <circle cx="50" cy="50" r="36" fill="none" stroke="currentColor" stroke-width="1.4"/>
-            <path d="M33 51 45 63 69 37" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <h2 class="seal__title">Payment Approved</h2>
-        <p class="seal__amount">{{ currency(total()) }}</p>
-        <dl class="seal__meta">
-          <div><dt>Ledger</dt><dd>{{ orderId }}</dd></div>
-          <div><dt>Method</dt><dd>{{ methods.find(m => m.id === selected())?.label }}</dd></div>
-          <div><dt>Time</dt><dd>{{ approvedAt() }}</dd></div>
-        </dl>
-        <button type="button" class="seal__close" (click)="startNewOrder()">Start a new order</button>
+  <div class="overlay" role="dialog" aria-modal="true" aria-label="Payment approved">
+    <div class="seal">
+      <div class="seal__stamp">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="3" />
+          <circle cx="50" cy="50" r="36" fill="none" stroke="currentColor" stroke-width="1.4" />
+          <path d="M33 51 45 63 69 37" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
       </div>
+      <h2 class="seal__title">Payment Approved</h2>
+      <p class="seal__amount">{{ currency(amount()) }}</p>
+      <dl class="seal__meta">
+        <div>
+          <dt>Ledger</dt>
+          <dd>{{ orderId() }}</dd>
+        </div>
+        <div>
+          <dt>Method</dt>
+          <dd>{{ methods.find(m => m.id === selected())?.label }}</dd>
+        </div>
+        <div>
+          <dt>Time</dt>
+          <dd>{{ approvedAt() }}</dd>
+        </div>
+      </dl>
+      <button type="button" class="seal__close" (click)="startNewOrder()">view order</button>
     </div>
+  </div>
   }
 
 </div>
