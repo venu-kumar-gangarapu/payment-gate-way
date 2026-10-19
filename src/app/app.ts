@@ -3,7 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ActivatedRoute, Route, Router } from '@angular/router';
-import { switchMap } from 'rxjs/operators';
 
 type MethodId = 'card' | 'upi' | 'netbanking' | 'wallet' | 'cod';
 
@@ -87,6 +86,9 @@ export class App {
         console.log(params);
         this.orderId.set(params?.orderId);
         this.amount.set(params?.amount);
+        if (params?.paymentId) {
+          this.paymentId.set(params.paymentId);
+        }
       })
   }
   protected select(id: MethodId) {
@@ -138,8 +140,8 @@ export class App {
     return '₹' + Number(value).toLocaleString('en-IN');
   }
 
-  private readonly PAYMENT_API  = 'https://order-now-app-api.onrender.com/ordernowApi/v1payment/generate';
-  private readonly ACCEPT_API   = 'https://order-now-app-api.onrender.com/ordernowApi/v1payment/accept';
+  private readonly PAYMENT_API  = 'https://order-now-app-api.onrender.com/ordernowApi/v1/payment/generate';
+  private readonly ACCEPT_API   = 'https://order-now-app-api.onrender.com/ordernowApi/v1/payment/accept';
   private readonly AUTH_TOKEN   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhZDY2MDk4NzI1NDUwYmViMDA0Yzk4MyIsInVzZXJOYW1lIjoiR2Fuc25ka2pkayIsImlhdCI6MTc5MjQzNDUyNSwiZXhwIjoxNzkyNTIwOTI1fQ._R7gBiFS3vG1rby9yE5U80feA3chqhnDg_G8JnSaH_I';
 
   // ---- Error state -------------------------------------------------------
@@ -156,43 +158,30 @@ export class App {
       'Content-Type': 'application/json',
     });
 
-    // Step 1 – Generate payment ID
-    const generateBody = {
-      amount: Number(this.amount()),
-      paymentMethod: this.selected(),
-    };
+    const paymentIdToSend = this.paymentId() || this.orderId();
 
-    this.http.post<any>(this.PAYMENT_API, generateBody, { headers })
-      .pipe(
-        switchMap((generateRes) => {
-          // Store paymentId from step 1, then call step 2 – Accept
-          this.paymentId.set(generateRes.paymentId ?? '');
-          return this.http.post<any>(
-            this.ACCEPT_API,
-            { paymentId: generateRes.paymentId },
-            { headers }
-          );
-        })
-      )
-      .subscribe({
-        next: (_acceptRes) => {
-          this.processing.set(false);
-          this.approved.set(true);
-          this.approvedAt.set(
-            new Date().toLocaleString('en-IN', {
-              day: '2-digit',
-              month: 'short',
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
-          );
-        },
-        error: (err) => {
-          this.processing.set(false);
-          const msg = err?.error?.message ?? err?.message ?? 'Payment failed. Please try again.';
-          this.paymentError.set(msg);
-        },
-      });
+    this.http.post<any>(this.ACCEPT_API, { paymentId: paymentIdToSend }, { headers }).subscribe({
+      next: (res) => {
+        if (res?.paymentId) {
+          this.paymentId.set(res.paymentId);
+        }
+        this.processing.set(false);
+        this.approved.set(true);
+        this.approvedAt.set(
+          new Date().toLocaleString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        );
+      },
+      error: (err) => {
+        this.processing.set(false);
+        const msg = err?.error?.message ?? err?.message ?? 'Payment failed. Please try again.';
+        this.paymentError.set(msg);
+      },
+    });
   }
 
   protected startNewOrder() {
