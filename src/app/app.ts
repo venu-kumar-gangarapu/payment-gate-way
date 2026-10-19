@@ -1,7 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ActivatedRoute, Route, Router } from '@angular/router';
+import { switchMap } from 'rxjs/operators';
 
 type MethodId = 'card' | 'upi' | 'netbanking' | 'wallet' | 'cod';
 
@@ -27,7 +29,8 @@ interface OrderLine {
 export class App {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  // ---- Order ledger ------------------------------------------------------
+  private readonly http = inject(HttpClient);
+
   protected readonly lines: OrderLine[] = [
     { name: 'Aurora Noise-Cancelling Headphones', meta: 'Slate Grey', qty: 1, price: 4999 }
   ];
@@ -135,27 +138,67 @@ export class App {
     return '₹' + Number(value).toLocaleString('en-IN');
   }
 
+  private readonly PAYMENT_API  = 'http://localhost:8080/ordernowApi/v1/payment/generate';
+  private readonly ACCEPT_API   = 'http://localhost:8080/ordernowApi/v1/payment/accept';
+  private readonly AUTH_TOKEN   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhZDY2MDk4NzI1NDUwYmViMDA0Yzk4MyIsInVzZXJOYW1lIjoiR2Fuc25ka2pkayIsImlhdCI6MTc5MjQzNDUyNSwiZXhwIjoxNzkyNTIwOTI1fQ._R7gBiFS3vG1rby9yE5U80feA3chqhnDg_G8JnSaH_I';
+
+  // ---- Error state -------------------------------------------------------
+  protected readonly paymentError = signal('');
+  protected readonly paymentId = signal('');
+
   protected authorize() {
     if (!this.canAuthorize()) return;
     this.processing.set(true);
-    window.setTimeout(() => {
-      this.processing.set(false);
-      this.approved.set(true);
-      this.approvedAt.set(
-        new Date().toLocaleString('en-IN', {
-          day: '2-digit',
-          month: 'short',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-      );
-    }, 1400);
+    this.paymentError.set('');
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${this.AUTH_TOKEN}`,
+      'Content-Type': 'application/json',
+    });
+
+    // Step 1 – Generate payment ID
+    const generateBody = {
+      amount: Number(this.amount()),
+      paymentMethod: this.selected(),
+    };
+
+    this.http.post<any>(this.PAYMENT_API, generateBody, { headers })
+      .pipe(
+        switchMap((generateRes) => {
+          // Store paymentId from step 1, then call step 2 – Accept
+          this.paymentId.set(generateRes.paymentId ?? '');
+          return this.http.post<any>(
+            this.ACCEPT_API,
+            { paymentId: generateRes.paymentId },
+            { headers }
+          );
+        })
+      )
+      .subscribe({
+        next: (_acceptRes) => {
+          this.processing.set(false);
+          this.approved.set(true);
+          this.approvedAt.set(
+            new Date().toLocaleString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+          );
+        },
+        error: (err) => {
+          this.processing.set(false);
+          const msg = err?.error?.message ?? err?.message ?? 'Payment failed. Please try again.';
+          this.paymentError.set(msg);
+        },
+      });
   }
 
   protected startNewOrder() {
     this.approved.set(false);
     this.processing.set(false);
-      window.location.href =
-      `https://react-apps-eight-steel.vercel.app/orders?payment=success&orderId=${this.orderId()}&paymentId=909`;
+    window.location.href =
+      `https://react-apps-eight-steel.vercel.app/orders?payment=success&orderId=${this.orderId()}&paymentId=${this.paymentId()}`;
   }
 }

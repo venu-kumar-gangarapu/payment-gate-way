@@ -196,6 +196,9 @@
 
       </div>
       <div class="btns">
+        @if (paymentError()) {
+        <p class="payment-error" role="alert">⚠ {{ paymentError() }}</p>
+        }
         <button type="button" class="authorize" [disabled]="!canAuthorize()" (click)="authorize()">
           @if (processing()) {
           <span class="authorize__spinner" aria-hidden="true"></span>

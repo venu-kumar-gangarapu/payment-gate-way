@@ -571,3 +571,14 @@ select {
   display: flex;
   gap:5rem;
 }
+
+.payment-error {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.45);
+  color: #f87171;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
