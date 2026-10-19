@@ -138,8 +138,8 @@ export class App {
     return '₹' + Number(value).toLocaleString('en-IN');
   }
 
-  private readonly PAYMENT_API  = 'http://localhost:8080/ordernowApi/v1/payment/generate';
-  private readonly ACCEPT_API   = 'http://localhost:8080/ordernowApi/v1/payment/accept';
+  private readonly PAYMENT_API  = 'https://order-now-app-api.onrender.com/ordernowApi/v1payment/generate';
+  private readonly ACCEPT_API   = 'https://order-now-app-api.onrender.com/ordernowApi/v1payment/accept';
   private readonly AUTH_TOKEN   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhZDY2MDk4NzI1NDUwYmViMDA0Yzk4MyIsInVzZXJOYW1lIjoiR2Fuc25ka2pkayIsImlhdCI6MTc5MjQzNDUyNSwiZXhwIjoxNzkyNTIwOTI1fQ._R7gBiFS3vG1rby9yE5U80feA3chqhnDg_G8JnSaH_I';
 
   // ---- Error state -------------------------------------------------------
