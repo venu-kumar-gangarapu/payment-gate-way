@@ -249,7 +249,24 @@
           <dd>{{ approvedAt() }}</dd>
         </div>
       </dl>
-      <button type="button" class="seal__close" (click)="startNewOrder()">view order</button>
+      <button type="button" class="seal__close" [disabled]="redirecting()" (click)="startNewOrder()">
+        @if (redirecting()) {
+          <span class="seal__spinner" aria-hidden="true"></span>
+          <span>Redirecting to orders…</span>
+        } @else {
+          <span>view order</span>
+        }
+      </button>
+    </div>
+  </div>
+  }
+
+  @if (redirecting()) {
+  <div class="redirect-backdrop" role="status" aria-live="polite">
+    <div class="redirect-box">
+      <div class="redirect-spinner"></div>
+      <p class="redirect-text">Returning to your orders...</p>
+      <span class="redirect-subtext">Please do not close this window</span>
     </div>
   </div>
   }

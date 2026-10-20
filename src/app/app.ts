@@ -184,10 +184,13 @@ export class App {
     });
   }
 
+  protected readonly redirecting = signal(false);
+
   protected startNewOrder() {
-    this.approved.set(false);
-    this.processing.set(false);
-    window.location.href =
-      `https://react-apps-eight-steel.vercel.app/orders?payment=success&orderId=${this.orderId()}&paymentId=${this.paymentId()}`;
+    this.redirecting.set(true);
+    setTimeout(() => {
+      window.location.href =
+        `https://react-apps-eight-steel.vercel.app/orders?payment=success&orderId=${this.orderId()}&paymentId=${this.paymentId()}`;
+    }, 1000);
   }
 }
